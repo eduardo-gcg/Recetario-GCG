@@ -1,0 +1,473 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#1C4656">
+<title>Recetario GCG</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+:root{
+  --bg:#f0f5f7;--surface:#fff;--surface2:#e8f0f4;
+  --accent:#1C4656;--accent2:#007B82;--accent-light:#CEDFE7;
+  --gold:#C9A871;--text:#1C4656;--text2:#3a6070;--text3:#7a9aaa;
+  --border:#c0d5de;--r:14px;
+}
+html,body{height:100%;background:var(--bg);color:var(--text);font-family:sans-serif;overflow:hidden}
+
+/* LOGIN */
+#login-view{position:fixed;inset:0;background:var(--accent);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:999;padding:24px}
+#login-view.hidden{display:none}
+.login-logo{margin-bottom:32px;text-align:center}
+.login-logo svg{display:block;margin:0 auto 10px}
+.login-logo h1{color:#fff;font-size:22px;font-weight:700;letter-spacing:-.5px}
+.login-logo p{color:rgba(255,255,255,0.6);font-size:13px;margin-top:4px}
+.login-card{background:#fff;border-radius:20px;padding:28px 24px;width:100%;max-width:380px;box-shadow:0 20px 60px rgba(0,0,0,0.3)}
+.login-card h2{font-size:16px;color:var(--text);margin-bottom:20px;font-weight:600}
+.inp-group{margin-bottom:16px}
+.inp-group label{display:block;font-size:12px;color:var(--text3);text-transform:uppercase;letter-spacing:.6px;margin-bottom:6px;font-weight:600}
+.inp-group input{width:100%;height:48px;border:1.5px solid var(--border);border-radius:12px;padding:0 16px;font-size:16px;color:var(--text);outline:none;background:var(--bg);-webkit-appearance:none}
+.inp-group input:focus{border-color:var(--accent2);background:#fff}
+.login-btn{width:100%;height:50px;background:var(--accent);border:none;border-radius:12px;color:#fff;font-size:16px;font-weight:700;cursor:pointer;margin-top:8px}
+.login-btn:active{opacity:.85}
+.login-error{color:#e53e3e;font-size:13px;text-align:center;margin-top:12px;min-height:20px}
+
+/* HEADER */
+#list-view{display:flex;flex-direction:column;height:100vh;max-width:900px;margin:0 auto}
+.hdr{background:var(--accent);padding:12px 18px;display:flex;align-items:center;gap:10px;flex-shrink:0}
+.hdr-logo{display:flex;align-items:center;gap:8px;flex:1}
+.hdr-title{color:#fff;font-size:18px;font-weight:700}
+.hdr-user{color:rgba(255,255,255,0.75);font-size:12px;white-space:nowrap;cursor:pointer}
+.search-bar{background:var(--accent);padding:0 14px 12px;display:flex;gap:8px;flex-shrink:0}
+.search-wrap{flex:1;position:relative}
+.search-wrap input{width:100%;height:40px;padding:0 12px 0 36px;border:none;border-radius:20px;font-size:15px;background:rgba(255,255,255,0.15);color:#fff;outline:none;-webkit-appearance:none}
+.search-wrap input::placeholder{color:rgba(255,255,255,0.55)}
+.search-wrap input:focus{background:rgba(255,255,255,0.22)}
+.search-ico{position:absolute;left:11px;top:50%;transform:translateY(-50%);color:rgba(255,255,255,0.7);font-size:15px;pointer-events:none}
+.src-btn{height:40px;padding:0 14px;border:1.5px solid rgba(255,255,255,0.35);border-radius:20px;background:transparent;color:#fff;font-size:13px;cursor:pointer;white-space:nowrap}
+.src-btn.on{background:var(--accent2);border-color:var(--accent2)}
+.filter-drawer{background:var(--surface);border-bottom:1px solid var(--border);max-height:0;overflow:hidden;transition:max-height .25s ease;flex-shrink:0}
+.filter-drawer.open{max-height:180px}
+.chips{padding:10px 14px;display:flex;flex-wrap:wrap;gap:7px;overflow-y:auto;max-height:180px}
+.chip{padding:5px 12px;border-radius:18px;font-size:12px;border:1.5px solid var(--border);background:var(--surface2);color:var(--text2);cursor:pointer}
+.chip.on{background:var(--accent2);color:#fff;border-color:var(--accent2)}
+.list-scroll{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:10px}
+.res-bar{font-size:12px;color:var(--text3);padding:2px 2px 8px}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:9px}
+@media(min-width:580px){.grid{grid-template-columns:1fr 1fr 1fr}}
+@media(min-width:800px){.grid{grid-template-columns:1fr 1fr 1fr 1fr}}
+.card{background:var(--surface);border-radius:var(--r);border:1px solid var(--border);padding:13px;cursor:pointer;transition:transform .1s,box-shadow .1s}
+.card:active{transform:scale(0.97)}
+.card:hover{box-shadow:0 2px 12px rgba(28,70,86,0.12)}
+.card-name{font-size:13px;font-weight:600;color:var(--text);line-height:1.4;margin-bottom:5px}
+.card-tag{display:inline-block;font-size:11px;padding:2px 8px;border-radius:10px;background:rgba(0,123,130,0.1);color:var(--accent2);margin-bottom:4px}
+.card-meta{font-size:11px;color:var(--text3)}
+.empty{text-align:center;padding:50px 20px;color:var(--text3);grid-column:1/-1}
+
+/* DETAIL VIEW */
+#detail-view{position:fixed;inset:0;background:var(--bg);z-index:100;display:flex;flex-direction:column;transform:translateX(100%);transition:transform .28s cubic-bezier(.4,0,.2,1);max-width:900px;margin:0 auto;left:0;right:0}
+#detail-view.open{transform:translateX(0)}
+.d-hdr{background:var(--accent);padding:14px 16px;display:flex;align-items:flex-start;gap:10px;flex-shrink:0}
+.back{background:rgba(255,255,255,0.15);border:none;color:#fff;width:36px;height:36px;border-radius:9px;cursor:pointer;font-size:18px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.back:active{background:rgba(255,255,255,0.25)}
+.d-title{color:#fff;font-size:15px;font-weight:700;line-height:1.35}
+.d-src{color:rgba(255,255,255,0.72);font-size:12px;margin-top:2px}
+.d-scroll{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:14px}
+.scale-box{background:var(--surface);border-radius:var(--r);padding:14px;margin-bottom:12px;border:1px solid var(--border)}
+.box-label{font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:.7px;margin-bottom:9px}
+.qty-row{display:flex;align-items:center;gap:10px;margin-bottom:11px;flex-wrap:wrap}
+.qty-ctrl{display:flex;align-items:center;background:var(--surface2);border-radius:21px;border:1.5px solid var(--border);overflow:hidden}
+.qty-btn{width:42px;height:42px;border:none;background:transparent;color:var(--accent2);font-size:26px;font-weight:300;cursor:pointer;display:flex;align-items:center;justify-content:center}
+.qty-inp{width:64px;height:42px;border:none;background:transparent;text-align:center;font-size:17px;font-weight:700;color:var(--text);outline:none;-webkit-appearance:none}
+.unit-row{display:flex;gap:6px;flex-wrap:wrap}
+.utab{padding:8px 13px;border-radius:19px;border:1.5px solid var(--border);background:var(--surface2);color:var(--text2);font-size:13px;cursor:pointer;transition:all .15s}
+.utab.on{background:var(--accent2);color:#fff;border-color:var(--accent2)}
+.metrics{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:12px}
+.metric{background:var(--surface);border-radius:11px;padding:11px;border:1px solid var(--border);text-align:center}
+.metric-lbl{font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.4px;margin-bottom:3px}
+.metric-val{font-size:16px;font-weight:700;color:var(--accent);line-height:1.2}
+.metric-sub{font-size:10px;color:var(--text3)}
+.ing-box{background:var(--surface);border-radius:var(--r);border:1px solid var(--border);overflow:hidden}
+.ing-hdr{padding:10px 14px;background:var(--accent-light);border-bottom:1px solid var(--border);font-size:11px;color:var(--accent);text-transform:uppercase;letter-spacing:.7px;display:flex;justify-content:space-between;font-weight:600}
+.ing-row{display:flex;align-items:center;padding:10px 14px;border-bottom:1px solid var(--border)}
+.ing-row:last-child{border-bottom:none}
+.ing-row:nth-child(even){background:#f5f9fb}
+.ing-name{flex:1;font-size:13px;color:var(--text);padding-right:8px;line-height:1.3}
+.ing-right{text-align:right;flex-shrink:0}
+.ing-base{font-size:11px;color:var(--text3)}
+.ing-scaled{font-size:14px;font-weight:700;color:var(--accent2)}
+.ing-lb{font-size:10px;color:var(--text3)}
+
+/* ADMIN PANEL */
+#admin-view{position:fixed;inset:0;background:var(--bg);z-index:200;display:flex;flex-direction:column;transform:translateY(100%);transition:transform .3s ease}
+#admin-view.open{transform:translateY(0)}
+.admin-hdr{background:var(--accent);padding:14px 18px;display:flex;align-items:center;gap:12px;flex-shrink:0}
+.admin-hdr h2{color:#fff;font-size:17px;font-weight:700;flex:1}
+.admin-close{background:rgba(255,255,255,0.15);border:none;color:#fff;width:36px;height:36px;border-radius:9px;cursor:pointer;font-size:18px;display:flex;align-items:center;justify-content:center}
+.admin-body{flex:1;overflow-y:auto;padding:14px}
+.admin-filters{display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap}
+.admin-filter-btn{padding:7px 14px;border-radius:18px;border:1.5px solid var(--border);background:var(--surface);color:var(--text2);font-size:12px;cursor:pointer}
+.admin-filter-btn.on{background:var(--accent2);color:#fff;border-color:var(--accent2)}
+.log-table{background:var(--surface);border-radius:var(--r);border:1px solid var(--border);overflow:hidden}
+.log-row{display:flex;align-items:flex-start;padding:10px 14px;border-bottom:1px solid var(--border);gap:10px}
+.log-row:last-child{border-bottom:none}
+.log-row:nth-child(even){background:#f5f9fb}
+.log-avatar{width:34px;height:34px;border-radius:50%;background:var(--accent2);color:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0}
+.log-info{flex:1;min-width:0}
+.log-name{font-size:13px;font-weight:600;color:var(--text)}
+.log-recipe{font-size:12px;color:var(--text2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.log-time{font-size:11px;color:var(--text3);flex-shrink:0;text-align:right}
+.log-empty{padding:40px;text-align:center;color:var(--text3);font-size:14px}
+.admin-stats{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-bottom:14px}
+.stat-card{background:var(--surface);border-radius:var(--r);border:1px solid var(--border);padding:12px;text-align:center}
+.stat-num{font-size:26px;font-weight:700;color:var(--accent2)}
+.stat-lbl{font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;margin-top:2px}
+
+::-webkit-scrollbar{width:3px}
+::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px}
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="login-view">
+  <div class="login-logo">
+    <svg width="80" height="46" viewBox="0 0 100 52" fill="none">
+      <text x="0" y="44" font-family="Arial Black,sans-serif" font-weight="900" font-size="48" fill="white" letter-spacing="-3">GCG</text>
+      <polygon points="80,1 90,1 85,9" fill="#C9A871"/>
+      <polygon points="76,10 92,10 84,23" fill="#51B086" opacity="0.95"/>
+      <polygon points="72,22 95,22 84,37" fill="white" opacity="0.75"/>
+    </svg>
+    <h1>Recetario GCG</h1>
+    <p>Ingresá tu código y PIN para continuar</p>
+  </div>
+  <div class="login-card">
+    <h2>Identificación</h2>
+    <div class="inp-group">
+      <label>Código de empleado</label>
+      <input id="inp-codigo" type="number" placeholder="Ej: 281" autocomplete="off" inputmode="numeric">
+    </div>
+    <div class="inp-group">
+      <label>PIN</label>
+      <input id="inp-pin" type="password" placeholder="••••" autocomplete="off" inputmode="numeric" maxlength="4">
+    </div>
+    <button class="login-btn" onclick="doLogin()">Entrar →</button>
+    <div class="login-error" id="login-error"></div>
+  </div>
+</div>
+
+<!-- MAIN LIST -->
+<div id="list-view">
+  <div class="hdr">
+    <div class="hdr-logo">
+      <svg width="44" height="26" viewBox="0 0 100 52" fill="none">
+        <text x="0" y="44" font-family="Arial Black,sans-serif" font-weight="900" font-size="48" fill="white" letter-spacing="-3">GCG</text>
+        <polygon points="80,1 90,1 85,9" fill="#C9A871"/>
+        <polygon points="76,10 92,10 84,23" fill="#51B086" opacity="0.95"/>
+        <polygon points="72,22 95,22 84,37" fill="white" opacity="0.75"/>
+      </svg>
+      <span class="hdr-title">Recetario GCG</span>
+    </div>
+    <span class="hdr-user" id="hdr-user" onclick="checkAdmin()">—</span>
+  </div>
+  <div class="search-bar">
+    <div class="search-wrap">
+      <span class="search-ico">🔍</span>
+      <input id="search" type="search" placeholder="Buscar receta o ingrediente…" autocomplete="off" oninput="doFilter()">
+    </div>
+    <button class="src-btn" id="src-btn" onclick="toggleDrawer()">⚙ Fuente</button>
+  </div>
+  <div class="filter-drawer" id="drawer">
+    <div class="chips" id="chips"></div>
+  </div>
+  <div class="list-scroll">
+    <div class="res-bar" id="res-bar"></div>
+    <div class="grid" id="grid"></div>
+  </div>
+</div>
+
+<!-- DETAIL VIEW -->
+<div id="detail-view">
+  <div class="d-hdr">
+    <button class="back" onclick="closeDetail()">←</button>
+    <div>
+      <div class="d-title" id="d-name"></div>
+      <div class="d-src" id="d-src"></div>
+    </div>
+  </div>
+  <div class="d-scroll">
+    <div class="scale-box">
+      <div class="box-label">Escalar receta</div>
+      <div class="qty-row">
+        <div class="qty-ctrl">
+          <button class="qty-btn" onclick="chg(-1)">−</button>
+          <input class="qty-inp" id="qty" type="number" value="1" min="0.1" step="0.1" oninput="recalc()">
+          <button class="qty-btn" onclick="chg(1)">+</button>
+        </div>
+        <div class="unit-row" id="utabs"></div>
+      </div>
+    </div>
+    <div class="metrics">
+      <div class="metric"><div class="metric-lbl">Factor</div><div class="metric-val" id="m-factor">1.000×</div></div>
+      <div class="metric"><div class="metric-lbl">Rendimiento</div><div class="metric-val" id="m-rend">—</div><div class="metric-sub" id="m-udm"></div></div>
+      <div class="metric"><div class="metric-lbl">Ingredientes</div><div class="metric-val" id="m-ing">—</div></div>
+    </div>
+    <div class="ing-box">
+      <div class="ing-hdr"><span>Ingrediente</span><span>Base → Escalado</span></div>
+      <div id="ing-list"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ADMIN PANEL -->
+<div id="admin-view">
+  <div class="admin-hdr">
+    <h2>📋 Panel de Control</h2>
+    <button class="admin-close" onclick="closeAdmin()">✕</button>
+  </div>
+  <div class="admin-body">
+    <div class="admin-stats" id="admin-stats"></div>
+    <div class="admin-filters" id="admin-filters"></div>
+    <div class="log-table" id="log-table"></div>
+  </div>
+</div>
+
+<script>
+// ===================== USUARIOS =====================
+const USERS = [
+  {codigo:'281',  pin:'2810', nombre:'José Rolando Escalante Leiva',   initials:'JE', admin:false},
+  {codigo:'149',  pin:'1490', nombre:'Mirna Lorena Ramos Somoza',       initials:'MR', admin:false},
+  {codigo:'1106', pin:'1106', nombre:'Henry Efrain Grande Herrera',     initials:'HG', admin:false},
+  {codigo:'1242', pin:'1242', nombre:'Evelyn Maricela García Aguilón',  initials:'EG', admin:false},
+  {codigo:'1409', pin:'1409', nombre:'Kenia Elizabeth Anzora Orellana', initials:'KA', admin:false},
+  {codigo:'1483', pin:'1483', nombre:'Wendy Carolina Martínez Sanchez', initials:'WM', admin:false},
+  {codigo:'1491', pin:'1491', nombre:'Gerson Eduardo Guardon Rojas',    initials:'GG', admin:false},
+  {codigo:'9999', pin:'2024', nombre:'Administrador GCG',               initials:'AD', admin:true},
+];
+
+let currentUser = null;
+
+function doLogin(){
+  const codigo = document.getElementById('inp-codigo').value.trim();
+  const pin    = document.getElementById('inp-pin').value.trim();
+  const user   = USERS.find(u => u.codigo === codigo && u.pin === pin);
+  if(!user){
+    document.getElementById('login-error').textContent = 'Código o PIN incorrecto. Intentá de nuevo.';
+    document.getElementById('inp-pin').value = '';
+    return;
+  }
+  currentUser = user;
+  document.getElementById('login-error').textContent = '';
+  document.getElementById('login-view').classList.add('hidden');
+  document.getElementById('hdr-user').textContent = user.admin ? '⚙ Admin' : user.nombre.split(' ')[0];
+  renderList();
+}
+
+document.getElementById('inp-pin').addEventListener('keydown', e => { if(e.key==='Enter') doLogin(); });
+document.getElementById('inp-codigo').addEventListener('keydown', e => { if(e.key==='Enter') document.getElementById('inp-pin').focus(); });
+
+// ===================== REGISTRO =====================
+const LOG_KEY = 'gcg_recipe_log';
+
+async function saveLog(entry){
+  try {
+    const existing = await window.storage.get(LOG_KEY);
+    const logs = existing ? JSON.parse(existing.value) : [];
+    logs.unshift(entry);
+    if(logs.length > 2000) logs.splice(2000);
+    await window.storage.set(LOG_KEY, JSON.stringify(logs));
+  } catch(e) {
+    // fallback silencioso
+  }
+}
+
+async function getLogs(){
+  try {
+    const res = await window.storage.get(LOG_KEY);
+    return res ? JSON.parse(res.value) : [];
+  } catch(e){ return []; }
+}
+
+function checkAdmin(){
+  if(currentUser && currentUser.admin) openAdmin();
+}
+
+// ===================== RECETAS =====================
+const R=[{"name":"HUEVOS A LA PLANCHA","sheet":"OPC 1 AM","source":"CW Ciclo 1","rendimiento_cant":2.0,"rendimiento_udm":"UND","ingredients":[{"name":"Huevos frescos","cant":2.0,"udm":"UND"},{"name":"Aceite para freir bidon","cant":1.0,"udm":"ML"},{"name":"Tomate para salsa","cant":7.65,"udm":"GR"},{"name":"Pasta de tomate galon","cant":5.8,"udm":"GR"},{"name":"Cebolla","cant":0.99,"udm":"GR"},{"name":"Ajo en cabeza","cant":1.05,"udm":"GR"},{"name":"Pimienta negra lb","cant":1.06,"udm":"GR"},{"name":"Consome de pollo industrial","cant":0.15,"udm":"GR"},{"name":"Sal (doña blanca)","cant":0.07,"udm":"GR"},{"name":"Tomatillo verde","cant":12.54,"udm":"GR"},{"name":"Cebolla","cant":2.17,"udm":"GR"},{"name":"Chile verde","cant":1.16,"udm":"GR"},{"name":"Consome de pollo industrial","cant":0.1,"udm":"GR"},{"name":"Agua potable","cant":2.0,"udm":"ML"},{"name":"Aceite para freir bidon","cant":0.5,"udm":"ML"},{"name":"Sal (doña blanca)","cant":0.1,"udm":"GR"},{"name":"Chile jalapeño","cant":0.63,"udm":"GR"},{"name":"Frijol rojo crudo entero","cant":45.0,"udm":"GR"},{"name":"Arroz precocido (mas rico)","cant":10.0,"udm":"GR"},{"name":"Sal (doña blanca)","cant":0.5,"udm":"GR"},{"name":"Aceite para freir bidon","cant":2.0,"udm":"ML"},{"name":"Cebolla","cant":5.0,"udm":"GR"},{"name":"Ajo en cabeza","cant":0.5,"udm":"GR"},{"name":"Platano","cant":52.0,"udm":"GR"},{"name":"Aceite para freir bidon","cant":3.9,"udm":"ML"}]},{"name":"TORTILLA DE HARINA DE TRIGO","sheet":"OPC 2 AM","source":"CW Ciclo 1","rendimiento_cant":140.0,"rendimiento_udm":"GR","ingredients":[{"name":"Tortilla de harina 65GR","cant":65.0,"udm":"GR"},{"name":"Jamon de cerdo Picnic","cant":25.0,"udm":"GR"},{"name":"Queso amarillo procesado (industriales)","cant":20.0,"udm":"GR"},{"name":"Frijoles molidos","cant":30.0,"udm":"GR"},{"name":"Frijol rojo crudo entero","cant":15.3,"udm":"GR"},{"name":"Agua potable","cant":11.9,"udm":"ML"},{"name":"Aceite para freir bidon","cant":1.7,"udm":"ML"},{"name":"Consome de pollo industrial","cant":0.51,"udm":"GR"},{"name":"Cebolla","cant":3.4,"udm":"GR"}]},{"name":"CROISSANT","sheet":"OPC 3 AM","source":"CW Ciclo 1","rendimiento_cant":160.0,"rendimiento_udm":"GR","ingredients":[{"name":"Croissant","cant":60.0,"udm":"GR"},{"name":"Queso crema lactosa 8 lbs","cant":20.0,"udm":"GR"},{"name":"Jamon de pavo ahumado","cant":30.0,"udm":"GR"},{"name":"Queso blanco procesado","cant":30.0,"udm":"GR"},{"name":"Tomate asado","cant":20.0,"udm":"GR"},{"name":"Harina suave","cant":23.72,"udm":"GR"},{"name":"Harina fuerte","cant":18.91,"udm":"GR"},{"name":"Agua potable","cant":9.04,"udm":"ML"},{"name":"Sal (doña blanca)","cant":0.42,"udm":"GR"},{"name":"Azucar blanca","cant":2.224,"udm":"GR"},{"name":"Leche en polvo","cant":0.9,"udm":"GR"},{"name":"Huevo pasteurizado 5 galones","cant":0.7245,"udm":"GR"},{"name":"Polvo Royal o Polvo Para Hornear","cant":0.9,"udm":"GR"},{"name":"Mantequilla blok","cant":0.9,"udm":"GR"},{"name":"Vitina hojaldre","cant":6.0,"udm":"GR"}]},{"name":"FAJITAS DE POLLO ENCEBOLLADAS","sheet":"OPC 1 PM","source":"CW Ciclo 1","rendimiento_cant":80.0,"rendimiento_udm":"GR","ingredients":[{"name":"Pechuga de pollo  4 ONZ","cant":102.22,"udm":"GR"},{"name":"Cebolla","cant":11.12,"udm":"GR"},{"name":"Perejil liso","cant":2.28,"udm":"GR"},{"name":"Aceite para freir bidon","cant":1.6,"udm":"ML"},{"name":"Consome de pollo industrial","cant":0.4,"udm":"GR"},{"name":"Sal (doña blanca)","cant":0.4,"udm":"GR"},{"name":"Pimienta negra lb","cant":0.08,"udm":"GR"},{"name":"Papas","cant":25.34,"udm":"GR"},{"name":"Cebolla","cant":4.89,"udm":"GR"},{"name":"Aceite para freir bidon","cant":0.75,"udm":"ML"},{"name":"Leche en galon","cant":9.25,"udm":"ML"},{"name":"Agua potable","cant":35.25,"udm":"ML"},{"name":"Mantequilla blok","cant":1.58,"udm":"GR"},{"name":"Sal (doña blanca)","cant":0.19,"udm":"GR"},{"name":"Pimienta negra lb","cant":0.05,"udm":"GR"},{"name":"Nuez moscada","cant":0.04,"udm":"GR"},{"name":"Zanahoria","cant":27.55,"udm":"GR"},{"name":"Aceite de oliva LT","cant":1.5,"udm":"ML"},{"name":"Ajo en cabeza","cant":0.88,"udm":"GR"},{"name":"Sal (doña blanca)","cant":0.38,"udm":"GR"},{"name":"Pimienta negra lb","cant":0.19,"udm":"GR"}]},{"name":"PASTA FUSILLI CON QUESO","sheet":"OPC 3 PM","source":"CW Ciclo 1","rendimiento_cant":110.0,"rendimiento_udm":"GR","ingredients":[{"name":"Pasta fusilli","cant":55.0,"udm":"GR"},{"name":"Agua potable","cant":77.0,"udm":"ML"},{"name":"Sal (doña blanca)","cant":5.5,"udm":"GR"},{"name":"Aceite para freir bidon","cant":3.3,"udm":"ML"},{"name":"Queso parmesano rallado","cant":5.0,"udm":"GR"},{"name":"Tomate para salsa","cant":39.67,"udm":"GR"},{"name":"Chile verde","cant":8.92,"udm":"GR"},{"name":"Cebolla","cant":8.36,"udm":"GR"},{"name":"Pasta de tomate galon","cant":6.75,"udm":"GR"},{"name":"Consome de pollo industrial","cant":0.91,"udm":"GR"},{"name":"Pechuga de pollo  4 ONZ","cant":44.23,"udm":"GR"}]},{"name":"FLAN DE COCO","sheet":"POSTRE PM","source":"CW Ciclo 1","rendimiento_cant":50.0,"rendimiento_udm":"GR","ingredients":[{"name":"Leche de coco","cant":13.5,"udm":"GR"},{"name":"Leche condensada","cant":36.0,"udm":"ML"},{"name":"Huevos Frescos","cant":0.18,"udm":"GR"},{"name":"Esencia de vainilla","cant":2.7,"udm":"GR"},{"name":"Fresa","cant":8.4,"udm":"GR"},{"name":"Agua potable","cant":5.0,"udm":"ML"}]},{"name":"PUPUSAS DE QUESO Y FRIJOL (2 UND)","sheet":"OPC 1 AM","source":"CW Ciclo 2","rendimiento_cant":75.0,"rendimiento_udm":"GR","ingredients":[{"name":"Harina de maiz maseca","cant":35.46,"udm":"GR"},{"name":"Agua potable","cant":11.9,"udm":"ML"},{"name":"Quesillo corriente","cant":10.6,"udm":"GR"},{"name":"Queso pizza mix","cant":8.34,"udm":"GR"},{"name":"Frijol rojo crudo entero","cant":6.88,"udm":"GR"},{"name":"Cebolla","cant":1.08,"udm":"GR"},{"name":"Sal (doña blanca)","cant":0.16,"udm":"GR"},{"name":"Aceite para freir bidon","cant":2.0,"udm":"ML"},{"name":"Repollo blanco","cant":42.13,"udm":"GR"},{"name":"Zanahoria","cant":4.41,"udm":"GR"},{"name":"Vinagre blanco galon","cant":4.8,"udm":"ML"}]},{"name":"HUEVO REVUELTO","sheet":"OPC 2 AM","source":"CW Ciclo 2","rendimiento_cant":70.0,"rendimiento_udm":"GR","ingredients":[{"name":"Huevo pasteurizado 5 galones","cant":72.85,"udm":"GR"},{"name":"Aceite para freir bidon","cant":0.75,"udm":"ML"},{"name":"Sal (doña blanca)","cant":0.3,"udm":"GR"},{"name":"Tomate para salsa","cant":13.6,"udm":"GR"},{"name":"Platano","cant":52.18,"udm":"GR"},{"name":"Frijol rojo crudo entero","cant":47.0,"udm":"GR"},{"name":"Cebolla","cant":6.7,"udm":"GR"},{"name":"Chile verde","cant":4.6,"udm":"GR"}]},{"name":"CUBOS DE POLLO GUISADOS","sheet":"OPC 1 PM","source":"CW Ciclo 2","rendimiento_cant":110.0,"rendimiento_udm":"GR","ingredients":[{"name":"Recorte de pechuga de Pollo Congelada","cant":83.74,"udm":"GR"},{"name":"Cebolla","cant":11.34,"udm":"GR"},{"name":"Tomate para salsa","cant":9.69,"udm":"GR"},{"name":"Chile verde","cant":3.3,"udm":"GR"},{"name":"Zanahoria","cant":16.69,"udm":"GR"},{"name":"Papa Revuelta","cant":17.1,"udm":"GR"},{"name":"Arroz precocido (mas rico)","cant":13.75,"udm":"GR"},{"name":"Brocoly","cant":36.73,"udm":"GR"}]},{"name":"OMELETTE NATURAL","sheet":"OPC 1 AM","source":"CW Ciclo 3","rendimiento_cant":70.0,"rendimiento_udm":"GR","ingredients":[{"name":"Huevo pasteurizado","cant":69.5,"udm":"GR"},{"name":"Aceite para freir bidon","cant":0.14,"udm":"ML"},{"name":"Sal (doña blanca)","cant":0.4,"udm":"GR"},{"name":"Tomate para salsa","cant":27.54,"udm":"GR"},{"name":"Papa Revuelta","cant":58.52,"udm":"GR"},{"name":"Jamon de cerdo picnic","cant":20.0,"udm":"GR"}]},{"name":"CARNE DESHILADA","sheet":"OPCION 2 PM","source":"CW Ciclo 3","rendimiento_cant":110.0,"rendimiento_udm":"GR","ingredients":[{"name":"Lomo de cerdo","cant":152.3,"udm":"GR"},{"name":"Cebolla","cant":19.5,"udm":"GR"},{"name":"Ajo en cabeza","cant":1.9,"udm":"GR"},{"name":"Chile verde","cant":10.4,"udm":"GR"},{"name":"Tomate para salsa","cant":11.7,"udm":"GR"},{"name":"Brocoli","cant":15.0,"udm":"GR"},{"name":"Coliflor","cant":15.0,"udm":"GR"}]},{"name":"ESTOFADO DE POLLO MEDITERRANEO","sheet":"OPC 1 PM","source":"CW Ciclo 4","rendimiento_cant":110.0,"rendimiento_udm":"GR","ingredients":[{"name":"Recorte de pechuga de Pollo Congelada","cant":120.7,"udm":"GR"},{"name":"Tomate roma","cant":3.12,"udm":"GR"},{"name":"Cebolla","cant":2.19,"udm":"GR"},{"name":"Aceituna rebanada negra galon","cant":0.55,"udm":"GR"},{"name":"Arroz precocido (mas rico)","cant":34.58,"udm":"GR"},{"name":"Zuchinni","cant":60.35,"udm":"GR"}]},{"name":"MILANESA DE CERDO","sheet":"OPC 2 PM","source":"CW Ciclo 4","rendimiento_cant":80.0,"rendimiento_udm":"GR","ingredients":[{"name":"Lomo de cerdo","cant":80.0,"udm":"GR"},{"name":"Empanizador","cant":0.64,"udm":"GR"},{"name":"Huevo pasteurizado 5 galones","cant":2.1,"udm":"GR"},{"name":"Mostaza","cant":6.0,"udm":"GR"},{"name":"Papas revueltas","cant":60.0,"udm":"GR"},{"name":"Guisquil","cant":30.35,"udm":"GR"}]},{"name":"HUEVO REVUELTO CON CEBOLLIN","sheet":"DESAYUNO","source":"MAD/YC Ciclo 1","rendimiento_cant":90.0,"rendimiento_udm":"GR","ingredients":[{"name":"Huevo pasteurizado 5 galones","cant":85.0,"udm":"GR"},{"name":"Sal (doña blanca)","cant":0.8,"udm":"GR"},{"name":"Aceite para freir bidon","cant":1.6,"udm":"ML"},{"name":"Cebollin (aerolínea)","cant":4.01,"udm":"GR"},{"name":"Chorizo de pollo","cant":27.0,"udm":"GR"}]},{"name":"FAJITAS DE RES ENCEBOLLADAS","sheet":"OPC 1 PM","source":"MAD/YC Ciclo 1","rendimiento_cant":120.0,"rendimiento_udm":"GR","ingredients":[{"name":"Filete de res marinado","cant":112.22,"udm":"GR"},{"name":"Cebolla","cant":11.12,"udm":"GR"},{"name":"Frijol rojo crudo entero","cant":34.4,"udm":"GR"},{"name":"Arroz precocido (mas rico)","cant":31.9,"udm":"GR"},{"name":"Sal (doña blanca)","cant":0.5,"udm":"GR"}]},{"name":"PASTEL TRES LECHES","sheet":"POSTRE","source":"MAD/YC Ciclo 1","rendimiento_cant":60.0,"rendimiento_udm":"GR","ingredients":[{"name":"Base rich Tres Leches 8.8 Lb.","cant":25.2,"udm":"GR"},{"name":"Leche en galon","cant":28.0,"udm":"ML"},{"name":"Base pimi","cant":9.8,"udm":"GR"},{"name":"Canela molida","cant":0.14,"udm":"GR"}]},{"name":"PAN BLANCO","sheet":"PANADERIA","source":"MAD/YC Ciclo 1","rendimiento_cant":30.0,"rendimiento_udm":"GR","ingredients":[{"name":"Harina fuerte","cant":18.7,"udm":"GR"},{"name":"Azucar blanca","cant":0.91,"udm":"GR"},{"name":"Vitina pan","cant":0.68,"udm":"GR"},{"name":"Vitina clasica","cant":0.68,"udm":"GR"},{"name":"Leche en galon","cant":0.28,"udm":"ML"},{"name":"Levadura seca","cant":0.14,"udm":"GR"},{"name":"Agua potable","cant":8.3,"udm":"ML"}]},{"name":"SOPA DE POLLO","sheet":"SOPA DE POLLO","source":"Sala VIP","rendimiento_cant":1.0,"rendimiento_udm":"LITRO","ingredients":[{"name":"Pipian","cant":50.0,"udm":"GR"},{"name":"Zanahoria","cant":50.0,"udm":"GR"},{"name":"Guisquil","cant":50.0,"udm":"GR"},{"name":"Chipilin","cant":10.0,"udm":"GR"},{"name":"Pechuga de pollo americana","cant":120.0,"udm":"GR"},{"name":"Arroz blanco","cant":20.0,"udm":"GR"},{"name":"Cebolla","cant":20.0,"udm":"GR"},{"name":"Tomate roma","cant":15.0,"udm":"GR"},{"name":"Cilantro","cant":3.0,"udm":"GR"},{"name":"Agua potable","cant":1100.0,"udm":"ML"}]},{"name":"SOPA DE RES","sheet":"SOPA DE RES","source":"Sala VIP","rendimiento_cant":1.0,"rendimiento_udm":"LITRO","ingredients":[{"name":"Repollo blanco","cant":28.89,"udm":"GR"},{"name":"Zanahoria","cant":70.29,"udm":"GR"},{"name":"Guisquil","cant":74.55,"udm":"GR"},{"name":"Posta negra","cant":90.0,"udm":"GR"},{"name":"Cebolla","cant":21.71,"udm":"GR"},{"name":"Papa Revuelta","cant":66.0,"udm":"GR"},{"name":"Agua potable","cant":700.0,"udm":"ML"}]},{"name":"PUPUSAS REVUELTAS","sheet":"PUPUSAS","source":"Sala VIP","rendimiento_cant":75.0,"rendimiento_udm":"GR","ingredients":[{"name":"Harina de maiz maseca","cant":25.15,"udm":"GR"},{"name":"Agua potable","cant":22.89,"udm":"ML"},{"name":"Quesillo súper especial","cant":12.93,"udm":"GR"},{"name":"Frijoles molidos","cant":9.96,"udm":"GR"},{"name":"Chicharrón de cerdo molido","cant":6.99,"udm":"GR"},{"name":"Repollo blanco","cant":786.93,"udm":"GR"},{"name":"Zanahoria","cant":91.17,"udm":"GR"},{"name":"Cebolla","cant":135.2,"udm":"GR"},{"name":"Chile verde","cant":36.05,"udm":"GR"},{"name":"Oregano","cant":1.3,"udm":"GR"},{"name":"Vinagre blanco galon","cant":31.13,"udm":"ML"},{"name":"Sal (doña blanca)","cant":1.3,"udm":"GR"}]},{"name":"CASAMIENTO","sheet":"CASAMIENTO","source":"Sala VIP","rendimiento_cant":1000.0,"rendimiento_udm":"GR","ingredients":[{"name":"Arroz precocido (mas rico)","cant":300.0,"udm":"GR"},{"name":"Cebolla","cant":65.14,"udm":"GR"},{"name":"Agua potable","cant":250.0,"udm":"ML"},{"name":"Sal (doña blanca)","cant":20.0,"udm":"GR"},{"name":"Frijol rojo crudo entero","cant":400.0,"udm":"GR"},{"name":"Consome de pollo industrial","cant":10.0,"udm":"GR"}]},{"name":"PLATANO FRITO","sheet":"PLATANO FRITO","source":"Sala VIP","rendimiento_cant":1000.0,"rendimiento_udm":"GR","ingredients":[{"name":"Platano","cant":1304.55,"udm":"GR"},{"name":"Aceite para freir bidon","cant":200.0,"udm":"ML"}]},{"name":"VEGETALES ASADOS AL HORNO","sheet":"VEGETALES ASADOS","source":"Sala VIP","rendimiento_cant":500.0,"rendimiento_udm":"GR","ingredients":[{"name":"Zanahoria","cant":117.14,"udm":"GR"},{"name":"Zuchinni","cant":165.0,"udm":"GR"},{"name":"Cebolla morada","cant":141.18,"udm":"GR"},{"name":"Chile rojo","cant":132.0,"udm":"GR"},{"name":"Ajo en cabeza","cant":29.25,"udm":"GR"},{"name":"Aceite de oliva LT","cant":15.0,"udm":"ML"},{"name":"Sal (doña blanca)","cant":5.0,"udm":"GR"}]},{"name":"LASAÑA DE PAPA CON QUESO","sheet":"LASAÑA DE PAPA","source":"Sala VIP","rendimiento_cant":120.0,"rendimiento_udm":"GR","ingredients":[{"name":"Papas grandes","cant":77.28,"udm":"GR"},{"name":"Salsa de tomate","cant":28.75,"udm":"GR"},{"name":"Cebolla","cant":5.7,"udm":"GR"},{"name":"Sal (doña blanca)","cant":0.7,"udm":"GR"},{"name":"Queso mozzarella rallado","cant":19.75,"udm":"GR"}]},{"name":"CREMA DE PAPA CON TOCINO","sheet":"CREMA DE PAPA CON TOCINO","source":"Sala VIP","rendimiento_cant":1.0,"rendimiento_udm":"LITRO","ingredients":[{"name":"Papa 3 por lb lavada","cant":320.0,"udm":"GR"},{"name":"Crema corriente","cant":140.0,"udm":"GR"},{"name":"Tocino ahumado de sirloin","cant":132.0,"udm":"GR"},{"name":"Cebolla","cant":32.29,"udm":"GR"},{"name":"Mantequilla blok","cant":20.0,"udm":"GR"},{"name":"Agua potable","cant":600.0,"udm":"ML"}]},{"name":"MARISCADA","sheet":"MARISCADA","source":"Sala VIP","rendimiento_cant":1.0,"rendimiento_udm":"LITRO","ingredients":[{"name":"Recorte de tilapia","cant":110.0,"udm":"GR"},{"name":"Camaroncillo","cant":80.0,"udm":"GR"},{"name":"Almeja","cant":80.0,"udm":"GR"},{"name":"Crema corriente","cant":70.0,"udm":"GR"},{"name":"Espinaca deshojada","cant":30.0,"udm":"GR"},{"name":"Agua potable","cant":620.0,"udm":"ML"}]},{"name":"JALEA DE CHOCOLATE","sheet":"JALEA DE CHOCOLATE","source":"Sala VIP","rendimiento_cant":2362.0,"rendimiento_udm":"GR","ingredients":[{"name":"CHOCOLATE BARRA","cant":1362.0,"udm":"GR"},{"name":"LECHE LIQUIDA","cant":1000.0,"udm":"ML"}]},{"name":"PAELLA SALVADOREÑA","sheet":"PAELLA SALVADOREÑA","source":"Sala VIP","rendimiento_cant":500.0,"rendimiento_udm":"GR","ingredients":[{"name":"ARROZ PRECOCIDO","cant":110.0,"udm":"GR"},{"name":"CAMARONCILLO","cant":40.5,"udm":"GR"},{"name":"CHORIZO DE POLLO","cant":25.2,"udm":"GR"},{"name":"PECHUGA DE 4OZ","cant":67.5,"udm":"GR"},{"name":"CALAMAR","cant":54.0,"udm":"GR"},{"name":"LOMO DE CERDO","cant":21.75,"udm":"GR"},{"name":"AGUA","cant":180.0,"udm":"ML"}]},{"name":"ENSALADA CESAR","sheet":"ENSALADA CESAR","source":"Bistró","rendimiento_cant":330.0,"rendimiento_udm":"GR","ingredients":[{"name":"Lechuga romana","cant":70.0,"udm":"GR"},{"name":"Pechuga de pollo grillada","cant":80.0,"udm":"GR"},{"name":"Crotones","cant":30.0,"udm":"GR"},{"name":"Queso parmesano rallado","cant":20.0,"udm":"GR"},{"name":"Tomate cherry","cant":60.0,"udm":"GR"},{"name":"Aderezo cesar","cant":70.0,"udm":"GR"},{"name":"Mayonesa","cant":66.0,"udm":"GR"}]},{"name":"HAMBURGUESA BISTRO","sheet":"HAMBURGUESA","source":"Bistró","rendimiento_cant":265.0,"rendimiento_udm":"GR","ingredients":[{"name":"Pan hamburguesa","cant":100.0,"udm":"GR"},{"name":"Torta de res (actualizada)","cant":100.0,"udm":"GR"},{"name":"Queso cheddar","cant":40.0,"udm":"GR"},{"name":"Pepinillo","cant":15.0,"udm":"GR"},{"name":"Mayonesa","cant":10.0,"udm":"GR"}]},{"name":"WRAP DE POLLO","sheet":"WRAP DE POLLO","source":"Bistró","rendimiento_cant":234.0,"rendimiento_udm":"GR","ingredients":[{"name":"Tortilla de harina","cant":80.0,"udm":"GR"},{"name":"Aderezo ranch","cant":30.0,"udm":"GR"},{"name":"Lechuga romana","cant":35.0,"udm":"GR"},{"name":"Pechuga de pollo","cant":75.0,"udm":"GR"},{"name":"Queso parmesano rallado","cant":7.0,"udm":"GR"}]},{"name":"PIZZA NAPOLITANA AL PESTO","sheet":"PIZZA NAPOLITANA AL PESTO","source":"Bistró","rendimiento_cant":386.0,"rendimiento_udm":"GR","ingredients":[{"name":"Masa para pizza","cant":175.0,"udm":"GR"},{"name":"Salsa para pizza","cant":50.0,"udm":"GR"},{"name":"Jamon picnic","cant":15.0,"udm":"GR"},{"name":"Tomate","cant":25.0,"udm":"GR"},{"name":"Pesto de albahaca","cant":6.0,"udm":"GR"},{"name":"Queso mozzarella rallado","cant":100.0,"udm":"GR"}]},{"name":"COCTEL DE FRUTAS MIXTO","sheet":"COCTELES","source":"Bistró","rendimiento_cant":230.0,"rendimiento_udm":"GR","ingredients":[{"name":"Sandía en cubos","cant":50.0,"udm":"GR"},{"name":"Piña en cubos","cant":50.0,"udm":"GR"},{"name":"Melón en cubos","cant":50.0,"udm":"GR"},{"name":"Fresa","cant":30.0,"udm":"GR"},{"name":"Papaya en cubos","cant":50.0,"udm":"GR"}]},{"name":"STROGONOFF DE POLLO","sheet":"PLATO PRINC. OPC PROTEINA","source":"Iberia YC Ciclo 1","rendimiento_cant":120.0,"rendimiento_udm":"GR","ingredients":[{"name":"Recorte de pechuga de Pollo Congelada","cant":110.0,"udm":"GR"},{"name":"Hongo rebanado galon","cant":13.0,"udm":"GR"},{"name":"Cebolla","cant":6.0,"udm":"GR"},{"name":"Pepinillo","cant":6.0,"udm":"GR"},{"name":"Crema corriente","cant":15.0,"udm":"GR"},{"name":"Papa lavada","cant":75.0,"udm":"GR"},{"name":"Calabaza","cant":66.0,"udm":"GR"}]},{"name":"SALMON MARINADO","sheet":"PLATO PRINCIPAL OPC 2","source":"Iberia BC Ciclo 1","rendimiento_cant":100.0,"rendimiento_udm":"GR","ingredients":[{"name":"Salmon fresco","cant":140.0,"udm":"GR"},{"name":"Sal (doña blanca)","cant":0.18,"udm":"GR"},{"name":"Aceite de oliva LT","cant":3.0,"udm":"ML"},{"name":"Eneldo fresco","cant":0.9,"udm":"GR"},{"name":"Crema corriente","cant":7.2,"udm":"GR"},{"name":"Limon","cant":3.0,"udm":"GR"}]},{"name":"OMELETTE CON CEBOLLIN","sheet":"OPC 1 AM","source":"UA BC Ciclo 1","rendimiento_cant":100.0,"rendimiento_udm":"GR","ingredients":[{"name":"Huevo pasteurizado","cant":100.5,"udm":"GR"},{"name":"Aceite para freir bidon","cant":0.4,"udm":"ML"},{"name":"Cebollin","cant":1.23,"udm":"GR"},{"name":"Papa Revuelta","cant":30.48,"udm":"GR"},{"name":"Cebolla","cant":20.0,"udm":"GR"},{"name":"Jamon de cerdo picnic","cant":30.0,"udm":"GR"}]},{"name":"PECHUGA DE POLLO GRILLADA","sheet":"OPC 1 PM","source":"UA BC Ciclo 1","rendimiento_cant":110.0,"rendimiento_udm":"GR","ingredients":[{"name":"Pechuga de pollo  4 ONZ","cant":116.0,"udm":"GR"},{"name":"Ajo en cabeza","cant":0.7,"udm":"GR"},{"name":"Papa Revuelta","cant":63.44,"udm":"GR"},{"name":"Crema corriente","cant":20.5,"udm":"GR"},{"name":"Zanahoria","cant":20.0,"udm":"GR"},{"name":"Brocoli","cant":30.0,"udm":"GR"}]},{"name":"POLLO A LA MOSTAZA","sheet":"CICLO 3","source":"Avianca CW C3","rendimiento_cant":150.0,"rendimiento_udm":"GR","ingredients":[{"name":"PECHUGA DE POLLO AMERICANA VAC PAC","cant":122.4,"udm":"GR"},{"name":"SALSA DE MOSTAZA","cant":27.2,"udm":"GR"},{"name":"MOSTAZA","cant":20.4,"udm":"GR"},{"name":"CEBOLLA","cant":34.0,"udm":"GR"},{"name":"SALSA BECHAMEL","cant":54.4,"udm":"GR"}]},{"name":"TILAPIA","sheet":"TILAPIA","source":"BC Ciclo 2","rendimiento_cant":100.0,"rendimiento_udm":"GR","ingredients":[{"name":"TILAPIA FRESCA","cant":120.0,"udm":"GR"},{"name":"SAL (DOÑA BLANCA)","cant":0.5,"udm":"GR"},{"name":"ACEITE DE OLIVA LT","cant":3.0,"udm":"ML"},{"name":"ARROZ PRECOCIDO","cant":30.0,"udm":"GR"},{"name":"CHILE ROJO","cant":20.0,"udm":"GR"},{"name":"MANGO FRESCO","cant":30.0,"udm":"GR"},{"name":"CEBOLLA MORADA","cant":30.0,"udm":"GR"}]},{"name":"SANDWICH CROISSANT DOBLE JAMON Y QUESO","sheet":"CROISSANT DOBLE JAMON Y QUESO","source":"Avianca BOB","rendimiento_cant":1.0,"rendimiento_udm":"UND","ingredients":[{"name":"Croissant natural 80 gr","cant":1.0,"udm":"UND"},{"name":"Queso crema","cant":10.0,"udm":"GR"},{"name":"Jamón de pavo blanco","cant":20.0,"udm":"GR"},{"name":"Jamón canadiense","cant":20.0,"udm":"GR"},{"name":"Queso cheddar","cant":15.0,"udm":"GR"},{"name":"Harina Fuerte","cant":38.0,"udm":"GR"},{"name":"Vitina hojaldre","cant":14.0,"udm":"GR"}]},{"name":"FOCACCIA MARGHERITA","sheet":"FOCACCIA MARGHERITA","source":"Avianca BOB","rendimiento_cant":1.0,"rendimiento_udm":"UND","ingredients":[{"name":"Pan focaccia con romero  80 gr","cant":1.0,"udm":"UND"},{"name":"Queso crema con pesto","cant":30.0,"udm":"GR"},{"name":"Queso mozzarella, 2 rebanadas","cant":30.0,"udm":"GR"},{"name":"Tomate confitado","cant":10.0,"udm":"GR"},{"name":"Harina fuerte","cant":40.5,"udm":"GR"},{"name":"Aceite de oliva","cant":2.0,"udm":"GR"}]},{"name":"PECHUGA DE POLLO ASADA AL CHIMICHURRI","sheet":"PECHUGA CHIMICHURRI","source":"BC Ciclo 1","rendimiento_cant":100.0,"rendimiento_udm":"GR","ingredients":[{"name":"PECHUGA DE POLLO  4 ONZ","cant":135.0,"udm":"GR"},{"name":"ACEITE DE OLIVA LT","cant":1.0,"udm":"ML"},{"name":"PEREJIL LISO","cant":3.0,"udm":"GR"},{"name":"OREGANO","cant":0.5,"udm":"GR"},{"name":"BROCOLY","cant":50.0,"udm":"GR"},{"name":"ZANAHORIA","cant":30.0,"udm":"GR"}]},{"name":"PASTA PENNE COCINADA","sheet":"OPC 2 PM","source":"MAD/YC Ciclo 1","rendimiento_cant":100.0,"rendimiento_udm":"GR","ingredients":[{"name":"Pasta penne 200 gramos","cant":40.0,"udm":"GR"},{"name":"Agua potable","cant":100.0,"udm":"ML"},{"name":"Sal (doña blanca)","cant":3.0,"udm":"GR"},{"name":"Salsa de queso cheddar","cant":25.0,"udm":"ML"},{"name":"Queso parmesano rallado","cant":3.0,"udm":"GR"}]},{"name":"BIFE DE RES BRASEADO","sheet":"ALMUERZO CENA CICLO 1","source":"Avianca BC Almuerzo/Cena","rendimiento_cant":100.0,"rendimiento_udm":"GR","ingredients":[{"name":"Posta negra","cant":140.0,"udm":"GR"},{"name":"Sal","cant":1.0,"udm":"GR"},{"name":"Cebolla","cant":20.0,"udm":"GR"},{"name":"Romero fresco","cant":0.5,"udm":"GR"},{"name":"Camote","cant":45.0,"udm":"GR"},{"name":"Espárragos","cant":39.0,"udm":"GR"}]},{"name":"FALAFEL","sheet":"VGML-76149","source":"SPML","rendimiento_cant":90.0,"rendimiento_udm":"GR","ingredients":[{"name":"GARBANZOS SECOS","cant":50.0,"udm":"GR"},{"name":"CEBOLLA BLANCA","cant":10.0,"udm":"GR"},{"name":"PEREJIL FRESCO","cant":5.0,"udm":"GR"},{"name":"CILANTRO FRESCO","cant":5.0,"udm":"GR"},{"name":"COMINO MOLIDO","cant":0.5,"udm":"GR"},{"name":"ACEITE VEGETAL (FREÍR)","cant":11.5,"udm":"GR"},{"name":"ARROZ BASMATI","cant":60.0,"udm":"GR"},{"name":"AGUA","cant":140.0,"udm":"GR"}]}];
+
+const SOURCES=[...new Set(R.map(r=>r.source))].sort();
+let filtered=[...R],activeSrc='',activeRec=null,activeUnit='UND',activeRecIdx=-1;
+
+const chipsEl=document.getElementById('chips');
+SOURCES.forEach(s=>{
+  const c=document.createElement('button');
+  c.className='chip';c.textContent=s;
+  c.onclick=()=>{activeSrc=activeSrc===s?'':s;document.querySelectorAll('.chip').forEach(x=>x.classList.toggle('on',x.textContent===activeSrc));doFilter()};
+  chipsEl.appendChild(c);
+});
+
+function toggleDrawer(){
+  const d=document.getElementById('drawer'),b=document.getElementById('src-btn');
+  d.classList.toggle('open');b.classList.toggle('on');
+}
+
+function doFilter(){
+  const q=document.getElementById('search').value.toLowerCase().trim();
+  filtered=R.filter(r=>{
+    if(activeSrc&&r.source!==activeSrc)return false;
+    if(!q)return true;
+    return r.name.toLowerCase().includes(q)||r.ingredients.some(i=>i.name.toLowerCase().includes(q));
+  });
+  renderList();
+}
+
+function renderList(){
+  const grid=document.getElementById('grid');
+  document.getElementById('res-bar').textContent=filtered.length+' recetas';
+  if(!filtered.length){grid.innerHTML='<div class="empty">Sin resultados</div>';return;}
+  grid.innerHTML=filtered.map(r=>{
+    const idx=R.indexOf(r);
+    return`<div class="card" onclick="openDetail(${idx})">
+      <div class="card-name">${r.name}</div>
+      <span class="card-tag">${r.source}</span>
+      <div class="card-meta">Rend: ${r.rendimiento_cant} ${r.rendimiento_udm} · ${r.ingredients.length} ingr.</div>
+    </div>`;
+  }).join('');
+}
+
+function openDetail(idx){
+  activeRec=R[idx];activeRecIdx=idx;activeUnit='UND';
+  document.getElementById('d-name').textContent=activeRec.name;
+  document.getElementById('d-src').textContent=activeRec.source+' · '+activeRec.sheet;
+  document.getElementById('qty').value=1;
+  document.getElementById('m-ing').textContent=activeRec.ingredients.length;
+  const isW=!['UND','und'].includes(activeRec.rendimiento_udm);
+  const tabs=document.getElementById('utabs');tabs.innerHTML='';
+  (isW?['UND','LB','KG']:['UND']).forEach(u=>{
+    const b=document.createElement('button');
+    b.className='utab'+(u==='UND'?' on':'');
+    b.textContent=u==='UND'?'Unidades':u==='LB'?'Libras':'Kilos';
+    b.onclick=()=>{activeUnit=u;tabs.querySelectorAll('.utab').forEach(x=>x.classList.toggle('on',x===b));recalc()};
+    tabs.appendChild(b);
+  });
+  document.getElementById('detail-view').classList.add('open');
+  document.querySelector('.d-scroll').scrollTop=0;
+  recalc();
+  // Registrar acceso
+  if(currentUser && !currentUser.admin){
+    const now=new Date();
+    saveLog({
+      codigo: currentUser.codigo,
+      nombre: currentUser.nombre,
+      initials: currentUser.initials,
+      receta: activeRec.name,
+      fuente: activeRec.source,
+      fecha: now.toLocaleDateString('es-SV'),
+      hora: now.toLocaleTimeString('es-SV',{hour:'2-digit',minute:'2-digit'}),
+      ts: now.getTime()
+    });
+  }
+}
+
+function closeDetail(){document.getElementById('detail-view').classList.remove('open')}
+
+function chg(d){
+  const inp=document.getElementById('qty');
+  let v=parseFloat(inp.value)||1;
+  v=Math.max(0.1,Math.round((v+d)*10)/10);
+  inp.value=v;recalc();
+}
+
+function recalc(){
+  if(!activeRec)return;
+  const qty=parseFloat(document.getElementById('qty').value)||1;
+  const udm=activeRec.rendimiento_udm;
+  const rendGr=udm==='GR'||udm==='ML'?activeRec.rendimiento_cant:
+               udm==='KG'?activeRec.rendimiento_cant*1000:
+               (udm==='LITRO'||udm==='LITROS')?activeRec.rendimiento_cant*1000:
+               activeRec.rendimiento_cant;
+  const factor=activeUnit==='UND'?qty:activeUnit==='LB'?(qty*453.592)/rendGr:(qty*1000)/rendGr;
+  document.getElementById('m-factor').textContent=factor.toFixed(3)+'×';
+  document.getElementById('m-rend').textContent=fmt(activeRec.rendimiento_cant*factor);
+  document.getElementById('m-udm').textContent=activeRec.rendimiento_udm;
+  document.getElementById('ing-list').innerHTML=activeRec.ingredients.map(ing=>{
+    const sc=ing.cant*factor;
+    const isGr=ing.udm==='GR'||ing.udm==='ML';
+    const lb=isGr?(sc/453.592).toFixed(3)+' lb':'';
+    return`<div class="ing-row">
+      <div class="ing-name">${ing.name}</div>
+      <div class="ing-right">
+        <div class="ing-base">${fmt(ing.cant)} ${ing.udm}</div>
+        <div class="ing-scaled">${fmt(sc)} ${ing.udm}</div>
+        ${lb?`<div class="ing-lb">${lb}</div>`:''}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function fmt(n){
+  if(n<0.001)return n.toFixed(4);
+  if(n<1)return n.toFixed(3);
+  if(n<10)return(Math.round(n*100)/100)+'';
+  if(n<1000)return(Math.round(n*10)/10)+'';
+  return Math.round(n).toLocaleString();
+}
+
+// ===================== ADMIN =====================
+let adminFilter='';
+
+async function openAdmin(){
+  document.getElementById('admin-view').classList.add('open');
+  await renderAdmin();
+}
+
+function closeAdmin(){
+  document.getElementById('admin-view').classList.remove('open');
+}
+
+async function renderAdmin(){
+  const logs = await getLogs();
+  // Stats
+  const uniqueUsers = [...new Set(logs.map(l=>l.codigo))].length;
+  document.getElementById('admin-stats').innerHTML=`
+    <div class="stat-card"><div class="stat-num">${logs.length}</div><div class="stat-lbl">Consultas totales</div></div>
+    <div class="stat-card"><div class="stat-num">${uniqueUsers}</div><div class="stat-lbl">Cocineros activos</div></div>
+  `;
+  // Filters
+  const nombres = [...new Set(logs.map(l=>l.nombre))];
+  document.getElementById('admin-filters').innerHTML=`
+    <button class="admin-filter-btn ${adminFilter===''?'on':''}" onclick="setAdminFilter('')">Todos</button>
+    ${nombres.map(n=>`<button class="admin-filter-btn ${adminFilter===n?'on':''}" onclick="setAdminFilter('${n}')">${n.split(' ')[0]}</button>`).join('')}
+  `;
+  // Log list
+  const filtered = adminFilter ? logs.filter(l=>l.nombre===adminFilter) : logs;
+  if(!filtered.length){
+    document.getElementById('log-table').innerHTML='<div class="log-empty">Sin registros aún</div>';
+    return;
+  }
+  document.getElementById('log-table').innerHTML = filtered.map(l=>`
+    <div class="log-row">
+      <div class="log-avatar">${l.initials||'??'}</div>
+      <div class="log-info">
+        <div class="log-name">${l.nombre}</div>
+        <div class="log-recipe">${l.receta}</div>
+      </div>
+      <div class="log-time">${l.fecha}<br>${l.hora}</div>
+    </div>
+  `).join('');
+}
+
+async function setAdminFilter(nombre){
+  adminFilter = nombre;
+  await renderAdmin();
+}
+
+let sx=0;
+document.getElementById('detail-view').addEventListener('touchstart',e=>{sx=e.touches[0].clientX},{passive:true});
+document.getElementById('detail-view').addEventListener('touchend',e=>{if(e.changedTouches[0].clientX-sx>80)closeDetail()},{passive:true});
+
+renderList();
+</script>
+</body>
+</html>
