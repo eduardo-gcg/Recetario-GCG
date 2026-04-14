@@ -258,7 +258,7 @@ document.getElementById('inp-pin').addEventListener('keydown', e => { if(e.key==
 document.getElementById('inp-codigo').addEventListener('keydown', e => { if(e.key==='Enter') document.getElementById('inp-pin').focus(); });
 
 // ===================== REGISTRO =====================
-const SHEET_URL='https://script.google.com/macros/s/AKfycbw3-XtKlGnypDF_NFi8lxt_ypcfFVGRaYx_vuC8ch5R_gg8zI5s1wvh1J097bYy12kkEQ/exec';
+const SHEET_URL='https://script.google.com/macros/s/AKfycbys0rHXiq9qc1KIwZa5WLpDa_ccSsGCSWlcJRJCfNtwe_Tg5Ud91HV1GVhClUIgJ34srQ/exec';
 async function saveLog(entry){
   try {
     await fetch(SHEET_URL, {
@@ -348,6 +348,7 @@ function openDetail(idx){
       fuente: activeRec.source,
       fecha: now.toLocaleDateString('es-SV'),
       hora: now.toLocaleTimeString('es-SV',{hour:'2-digit',minute:'2-digit'}),
+      porciones: document.getElementById('qty').value + ' ' + activeUnit + ' → ' + document.getElementById('m-rend').textContent + ' ' + activeRec.rendimiento_udm,
       ts: now.getTime()
     });
   }
